@@ -26,7 +26,7 @@ export class StampService {
         private readonly sequelize: Sequelize,
         private readonly configService: ConfigService,
     ) {
-        this.qrSecret = this.configService.get<string>("qrSecret");
+        this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
     }
 
     async redeemStamp(

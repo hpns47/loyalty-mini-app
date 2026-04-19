@@ -11,9 +11,9 @@ export class QrService {
     private readonly miniAppName: string;
 
     constructor(private readonly configService: ConfigService) {
-        this.qrSecret = this.configService.get<string>("qrSecret");
-        this.botUsername = this.configService.get<string>("botUsername");
-        this.miniAppName = this.configService.get<string>("miniAppName");
+        this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
+        this.botUsername = this.configService.getOrThrow<string>("botUsername");
+        this.miniAppName = this.configService.getOrThrow<string>("miniAppName");
     }
 
     async generateShopQr(shopId: string): Promise<IQrCodeResponse> {

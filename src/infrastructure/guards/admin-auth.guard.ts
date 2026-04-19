@@ -11,7 +11,7 @@ export class AdminAuthGuard implements CanActivate {
     private readonly adminKey: string;
 
     constructor(private readonly configService: ConfigService) {
-        this.adminKey = this.configService.get<string>("adminKey");
+        this.adminKey = this.configService.getOrThrow<string>("adminKey");
     }
 
     canActivate(context: ExecutionContext): boolean {

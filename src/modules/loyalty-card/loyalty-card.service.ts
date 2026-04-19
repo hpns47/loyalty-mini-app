@@ -38,6 +38,7 @@ export class LoyaltyCardService {
                     attributes: ["stamp_threshold"],
                 },
             ],
+            rejectOnEmpty: true,
         });
 
         return {
@@ -126,6 +127,7 @@ export class LoyaltyCardService {
 
             const updatedCard = await this.loyaltyCardModel.findByPk(cardId, {
                 transaction: t,
+                rejectOnEmpty: true,
             });
 
             const newStampCount = updatedCard.stamp_count;

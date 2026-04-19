@@ -14,7 +14,7 @@ export class TelegramAuthGuard implements CanActivate {
     private readonly nodeEnv: string;
 
     constructor(private readonly configService: ConfigService) {
-        const botToken = this.configService.get<string>("botToken");
+        const botToken = this.configService.getOrThrow<string>("botToken");
         this.nodeEnv = this.configService.get<string>("nodeEnv", "development");
         this.secretKey = createHmac("sha256", "WebAppData")
             .update(botToken)
