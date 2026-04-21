@@ -1,20 +1,47 @@
 import {
     Controller,
     Post,
+    Get,
     Body,
     HttpException,
     InternalServerErrorException,
+    UseGuards,
 } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { StampService } from "./stamp.service";
 import { RedeemStampDto } from "./dto/redeem-stamp.dto";
 import { StampError } from "./interfaces/stamp-error";
-import { ApiRedeemStamp } from "./swagger/api-stamp.decorator";
+import { ApiRedeemStamp, ApiGetStampHistory } from "./swagger/api-stamp.decorator";
+import { TelegramAuthGuard } from "../../infrastructure/guards/telegram-auth.guard";
+import { TelegramUser } from "../../infrastructure/decorators/telegram-user.decorator";
+import { ITelegramUser } from "../auth/interfaces/telegram-user.interface";
+import { UserService } from "../user/user.service";
 
 @ApiTags("Stamps")
 @Controller("api/v1/stamps")
 export class StampController {
-    constructor(private readonly stampService: StampService) {}
+    constructor(
+        private readonly stampService: StampService,
+        private readonly userService: UserService,
+    ) {}
+
+    @Get("history")
+    @UseGuards(TelegramAuthGuard)
+    @ApiGetStampHistory()
+    async getHistory(@TelegramUser() telegramUser: ITelegramUser) {
+        try {
+            const userId = await this.userService.getUserIdByTelegramId(
+                telegramUser.id,
+            );
+            const history = await this.stampService.getUserHistory(userId);
+            return { history };
+        } catch {
+            throw new InternalServerErrorException({
+                code: "INTERNAL_ERROR",
+                message: "Failed to fetch stamp history",
+            });
+        }
+    }
 
     @Post("redeem")
     @ApiRedeemStamp()

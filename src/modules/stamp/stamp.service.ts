@@ -12,6 +12,9 @@ import { IStampResult } from "./interfaces/stamp-result.interface";
 import { ShopService } from "../shop/shop.service";
 import { UserService } from "../user/user.service";
 import { LoyaltyCardService } from "../loyalty-card/loyalty-card.service";
+import { LoyaltyCard } from "../loyalty-card/entities/loyalty-card.entity";
+import { CoffeeShop } from "../shop/entities/coffee-shop.entity";
+import { IStampHistoryItem } from "./interfaces/stamp-history.interface";
 
 @Injectable()
 export class StampService {
@@ -124,5 +127,31 @@ export class StampService {
             isRewardReady: result.isRewardReady,
             userName,
         };
+    }
+
+    async getUserHistory(userId: string): Promise<IStampHistoryItem[]> {
+        const stamps = await this.stampModel.findAll({
+            include: [
+                {
+                    model: LoyaltyCard,
+                    required: true,
+                    where: { user_id: userId },
+                    attributes: [],
+                    include: [
+                        {
+                            model: CoffeeShop,
+                            attributes: ["name"],
+                        },
+                    ],
+                },
+            ],
+            order: [["added_at", "DESC"]],
+            limit: 50,
+        });
+
+        return stamps.map((s) => ({
+            shopName: s.loyalty_card.coffee_shop.name,
+            addedAt: s.added_at,
+        }));
     }
 }
