@@ -1,3 +1,5 @@
+import { ShopCategory } from "../../shop/enums/shop-category.enum";
+
 export interface ICardResponse {
     id: string;
     shop_id: string;
@@ -8,4 +10,5 @@ export interface ICardResponse {
 
 export interface ICardWithShopResponse extends ICardResponse {
     shop_name: string;
+    shop_category: ShopCategory;
 }

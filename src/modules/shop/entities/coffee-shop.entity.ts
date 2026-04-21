@@ -7,6 +7,7 @@ import {
     CreatedAt,
 } from "sequelize-typescript";
 import { LoyaltyCard } from "../../loyalty-card/entities/loyalty-card.entity";
+import { ShopCategory } from "../enums/shop-category.enum";
 
 @Table({
     tableName: "coffee_shops",
@@ -33,6 +34,13 @@ export class CoffeeShop extends Model {
 
     @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 10 })
     declare stamp_threshold: number;
+
+    @Column({
+        type: DataType.ENUM(...Object.values(ShopCategory)),
+        allowNull: false,
+        defaultValue: ShopCategory.COFFEE,
+    })
+    declare category: ShopCategory;
 
     @CreatedAt
     @Column({ field: "created_at" })

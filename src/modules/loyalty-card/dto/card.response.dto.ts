@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { ShopCategory } from "../../shop/enums/shop-category.enum";
 
 export class CardResponseDto {
     @ApiProperty({ example: "550e8400-e29b-41d4-a716-446655440000" })
@@ -20,6 +21,9 @@ export class CardResponseDto {
 export class CardWithShopResponseDto extends CardResponseDto {
     @ApiProperty({ example: "Моя кофейня" })
     shop_name: string;
+
+    @ApiProperty({ example: ShopCategory.COFFEE, enum: ShopCategory })
+    shop_category: ShopCategory;
 }
 
 export class CardsListResponseDto {

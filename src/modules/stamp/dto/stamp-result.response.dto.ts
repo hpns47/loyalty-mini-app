@@ -12,6 +12,9 @@ export class StampResultResponseDto {
 
     @ApiProperty({ example: "John" })
     userName: string;
+
+    @ApiProperty({ example: 10 })
+    stampThreshold: number;
 }
 
 export class StampRedeemResponseDto {

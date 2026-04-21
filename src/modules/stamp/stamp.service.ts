@@ -126,6 +126,7 @@ export class StampService {
             newStampCount: result.newStampCount,
             isRewardReady: result.isRewardReady,
             userName,
+            stampThreshold: shop.stamp_threshold,
         };
     }
 

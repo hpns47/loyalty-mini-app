@@ -3,4 +3,5 @@ export interface IStampResult {
     newStampCount: number;
     isRewardReady: boolean;
     userName: string;
+    stampThreshold: number;
 }

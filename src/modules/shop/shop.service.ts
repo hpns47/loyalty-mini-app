@@ -12,7 +12,7 @@ export class ShopService {
 
     async getShops(): Promise<IShopSummary[]> {
         const shops = await this.coffeeShopModel.findAll({
-            attributes: ["id", "name", "slug", "stamp_threshold"],
+            attributes: ["id", "name", "slug", "stamp_threshold", "category"],
         });
 
         return shops.map((shop) => ({
@@ -20,6 +20,7 @@ export class ShopService {
             name: shop.name,
             slug: shop.slug,
             stamp_threshold: shop.stamp_threshold,
+            category: shop.category,
         }));
     }
 

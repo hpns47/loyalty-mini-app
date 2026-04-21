@@ -56,7 +56,7 @@ export class LoyaltyCardService {
             include: [
                 {
                     model: CoffeeShop,
-                    attributes: ["name", "stamp_threshold"],
+                    attributes: ["name", "stamp_threshold", "category"],
                 },
             ],
         });
@@ -65,6 +65,7 @@ export class LoyaltyCardService {
             id: card.id,
             shop_id: card.shop_id,
             shop_name: card.coffee_shop.name,
+            shop_category: card.coffee_shop.category,
             stamp_count: card.stamp_count,
             status: card.status,
             stamp_threshold: card.coffee_shop.stamp_threshold,
