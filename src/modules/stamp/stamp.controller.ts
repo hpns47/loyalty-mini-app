@@ -14,8 +14,11 @@ import { RedeemStampDto } from "./dto/redeem-stamp.dto";
 import { StampError } from "./interfaces/stamp-error";
 import { ApiRedeemStamp, ApiGetStampHistory } from "./swagger/api-stamp.decorator";
 import { TelegramAuthGuard } from "../../infrastructure/guards/telegram-auth.guard";
+import { CashierAuthGuard } from "../../infrastructure/guards/cashier-auth.guard";
 import { TelegramUser } from "../../infrastructure/decorators/telegram-user.decorator";
+import { CashierShop } from "../../infrastructure/decorators/cashier-shop.decorator";
 import { ITelegramUser } from "../auth/interfaces/telegram-user.interface";
+import { ICashierShop } from "../cashier/interfaces/cashier-shop.interface";
 import { UserService } from "../user/user.service";
 
 @ApiTags("Stamps")
@@ -46,20 +49,22 @@ export class StampController {
 
     @Post("redeem")
     @Throttle({ strict: { ttl: 60_000, limit: 10 } })
+    @UseGuards(CashierAuthGuard)
     @ApiRedeemStamp()
-    async redeemStamp(@Body() dto: RedeemStampDto) {
+    async redeemStamp(
+        @Body() dto: RedeemStampDto,
+        @CashierShop() cashierShop: ICashierShop,
+    ) {
         try {
             const result = await this.stampService.redeemStamp(
                 dto.qrToken,
-                dto.shopId,
-                dto.cashierKey,
+                cashierShop.shopId,
             );
             return { stamp: result };
         } catch (err) {
             if (err instanceof StampError) {
                 const statusMap: Record<string, number> = {
                     SHOP_NOT_FOUND: 404,
-                    INVALID_CASHIER_KEY: 401,
                     QR_TOKEN_INVALID: 401,
                     QR_TOKEN_ALREADY_USED: 409,
                     STAMP_RATE_LIMIT: 429,

@@ -31,6 +31,15 @@ async function bootstrap() {
             },
             "AdminAuth",
         )
+        .addBearerAuth(
+            {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "JWT",
+                description: "JWT токен кассира (POST /cashier/login)",
+            },
+            "CashierAuth",
+        )
         .build();
 
     const document = SwaggerModule.createDocument(app, config);
@@ -57,6 +66,7 @@ async function bootstrap() {
         methods: ["GET", "POST", "OPTIONS"],
         allowedHeaders: [
             "Content-Type",
+            "Authorization",
             "X-Telegram-Init-Data",
             "X-Admin-Key",
         ],

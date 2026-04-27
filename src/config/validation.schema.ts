@@ -5,7 +5,7 @@ export const validationSchema: Joi.ObjectSchema = Joi.object({
     NODE_ENV: Joi.string()
         .valid("development", "production", "test")
         .default("development"),
-    JWT_SECRET: Joi.string(),
+    JWT_SECRET: Joi.string().required(),
     BOT_TOKEN: Joi.string().required(),
     QR_SECRET: Joi.string().required(),
     CASHIER_KEY_SALT: Joi.string().required(),

@@ -1,9 +1,7 @@
 import {
     Injectable,
     NotFoundException,
-    UnauthorizedException,
 } from "@nestjs/common";
-import * as bcrypt from "bcryptjs";
 import { ShopService } from "../shop/shop.service";
 import { LoyaltyCardService } from "../loyalty-card/loyalty-card.service";
 
@@ -17,9 +15,7 @@ export class RewardService {
     async redeem(
         userId: string,
         shopId: string,
-        cashierKey: string,
     ): Promise<{ success: boolean }> {
-        // Validate shop
         const shop = await this.shopService.findById(shopId);
         if (!shop) {
             throw new NotFoundException({
@@ -28,19 +24,6 @@ export class RewardService {
             });
         }
 
-        // Validate cashier key
-        const keyValid = await bcrypt.compare(
-            cashierKey,
-            shop.cashier_key_hash,
-        );
-        if (!keyValid) {
-            throw new UnauthorizedException({
-                code: "INVALID_CASHIER_KEY",
-                message: "Invalid cashier key",
-            });
-        }
-
-        // Find reward-ready card
         const cardId = await this.loyaltyCardService.findRewardReadyCard(
             userId,
             shopId,
@@ -52,7 +35,6 @@ export class RewardService {
             });
         }
 
-        // Reset the card
         await this.loyaltyCardService.resetCard(cardId);
 
         return { success: true };

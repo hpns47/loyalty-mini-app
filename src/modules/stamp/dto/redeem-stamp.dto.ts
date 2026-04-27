@@ -1,4 +1,4 @@
-import { IsString, IsUUID, MinLength } from "class-validator";
+import { IsString, MinLength } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class RedeemStampDto {
@@ -6,13 +6,4 @@ export class RedeemStampDto {
     @IsString()
     @MinLength(1)
     declare qrToken: string;
-
-    @ApiProperty({ description: "UUID кофейни" })
-    @IsUUID()
-    declare shopId: string;
-
-    @ApiProperty({ description: "Ключ кассира" })
-    @IsString()
-    @MinLength(1)
-    declare cashierKey: string;
 }

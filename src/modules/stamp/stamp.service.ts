@@ -3,7 +3,6 @@ import { InjectModel } from "@nestjs/sequelize";
 import { ConfigService } from "@nestjs/config";
 import { Sequelize } from "sequelize-typescript";
 import { createHash } from "crypto";
-import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { Op } from "sequelize";
 import { Stamp } from "./entities/stamp.entity";
@@ -35,7 +34,6 @@ export class StampService {
     async redeemStamp(
         qrToken: string,
         shopId: string,
-        cashierKey: string,
     ): Promise<IStampResult> {
         // 1. Fetch shop via ShopService
         const shop = await this.shopService.findById(shopId);
@@ -44,19 +42,7 @@ export class StampService {
             throw new StampError("SHOP_NOT_FOUND", "Shop not found");
         }
 
-        // 2. Validate cashier key
-        const cashierKeyValid = await bcrypt.compare(
-            cashierKey,
-            shop.cashier_key_hash,
-        );
-        if (!cashierKeyValid) {
-            throw new StampError(
-                "INVALID_CASHIER_KEY",
-                "Invalid cashier key",
-            );
-        }
-
-        // 3. Verify JWT
+        // 2. Verify user QR JWT
         let userId: string;
         try {
             const payload = jwt.verify(qrToken, this.qrSecret, {
