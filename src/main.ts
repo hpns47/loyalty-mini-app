@@ -50,6 +50,9 @@ async function bootstrap() {
         },
     });
 
+    // Trust Nginx reverse proxy so req.ip uses X-Forwarded-For (needed for rate limiting per real IP)
+    app.getHttpAdapter().getInstance().set("trust proxy", 1);
+
     // Security headers
     app.use(helmet());
 
