@@ -4,6 +4,7 @@ import {
     UseGuards,
     InternalServerErrorException,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags } from "@nestjs/swagger";
 import { TelegramAuthGuard } from "../../infrastructure/guards/telegram-auth.guard";
 import { TelegramUser } from "../../infrastructure/decorators/telegram-user.decorator";
@@ -17,6 +18,7 @@ export class AuthController {
     constructor(private readonly userService: UserService) {}
 
     @Post("me")
+    @Throttle({ strict: { ttl: 60_000, limit: 10 } })
     @UseGuards(TelegramAuthGuard)
     @ApiMe()
     async me(@TelegramUser() telegramUser: ITelegramUser) {

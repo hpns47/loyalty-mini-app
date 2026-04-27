@@ -3,6 +3,7 @@ import { AppModule } from "./app.module";
 import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { I18nService } from "nestjs-i18n";
 import { ValidationPipe } from "./infrastructure/pipes/validation.pipe";
+import helmet from "helmet";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -39,6 +40,9 @@ async function bootstrap() {
             persistAuthorization: true,
         },
     });
+
+    // Security headers
+    app.use(helmet());
 
     // CORS
     const frontendUrl = process.env.FRONTEND_URL;

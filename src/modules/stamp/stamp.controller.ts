@@ -7,6 +7,7 @@ import {
     InternalServerErrorException,
     UseGuards,
 } from "@nestjs/common";
+import { Throttle } from "@nestjs/throttler";
 import { ApiTags } from "@nestjs/swagger";
 import { StampService } from "./stamp.service";
 import { RedeemStampDto } from "./dto/redeem-stamp.dto";
@@ -44,6 +45,7 @@ export class StampController {
     }
 
     @Post("redeem")
+    @Throttle({ strict: { ttl: 60_000, limit: 10 } })
     @ApiRedeemStamp()
     async redeemStamp(@Body() dto: RedeemStampDto) {
         try {

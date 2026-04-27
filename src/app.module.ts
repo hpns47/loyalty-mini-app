@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { ThrottlerModule, ThrottlerGuard } from "@nestjs/throttler";
 import { ConfigHostModule } from "./config/config.module";
 import { AppController } from "./app.controller";
 import { DatabaseModule } from "./modules/database/database.module";
@@ -15,6 +17,10 @@ import { QrModule } from "./modules/qr/qr.module";
 
 @Module({
     imports: [
+        ThrottlerModule.forRoot([
+            { name: "default", ttl: 60_000, limit: 60 },
+            { name: "strict", ttl: 60_000, limit: 10 },
+        ]),
         ConfigHostModule,
         DatabaseModule,
         LocalesModule,
@@ -29,6 +35,8 @@ import { QrModule } from "./modules/qr/qr.module";
         QrModule,
     ],
     controllers: [AppController],
-    providers: [],
+    providers: [
+        { provide: APP_GUARD, useClass: ThrottlerGuard },
+    ],
 })
 export class AppModule {}
