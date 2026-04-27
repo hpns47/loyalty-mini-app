@@ -32,14 +32,12 @@ export class StampService {
   }
 
   async redeemStamp(qrToken: string, shopId: string): Promise<IStampResult> {
-    // 1. Fetch shop via ShopService
     const shop = await this.shopService.findById(shopId);
 
     if (!shop) {
       throw new StampError("SHOP_NOT_FOUND", "Shop not found");
     }
 
-    // 2. Verify user QR JWT
     let userId: string;
     try {
       const payload = jwt.verify(qrToken, this.qrSecret, {
@@ -50,13 +48,10 @@ export class StampService {
       throw new StampError("QR_TOKEN_INVALID", "Invalid or expired QR token");
     }
 
-    // 4. Hash token
     const qrTokenHash = createHash("sha256").update(qrToken).digest("hex");
 
-    // 5. Ensure loyalty card exists via LoyaltyCardService
     const cardId = await this.loyaltyCardService.ensureCard(userId, shopId);
 
-    // 6. Check duplicate token
     const dupeCount = await this.stampModel.count({
       where: { qr_token_hash: qrTokenHash },
     });
@@ -68,7 +63,6 @@ export class StampService {
       );
     }
 
-    // 7. Rate limit — 10 seconds
     const tenSecondsAgo = new Date(Date.now() - 10_000);
     const recentCount = await this.stampModel.count({
       where: {
@@ -84,7 +78,6 @@ export class StampService {
       );
     }
 
-    // 8+9. Atomic: insert stamp + increment card via LoyaltyCardService
     const result = await this.loyaltyCardService.addStampTransaction(
       cardId,
       qrTokenHash,
@@ -92,7 +85,6 @@ export class StampService {
       this.stampModel,
     );
 
-    // 10. Fetch user name via UserService
     const userName = await this.userService.getFirstName(userId);
 
     return {
@@ -105,34 +97,27 @@ export class StampService {
   }
 
   async getUserHistory(userId: string): Promise<IStampHistoryItem[]> {
-    try {
-      const stamps = await this.stampModel.findAll({
-        include: [
-          {
-            model: LoyaltyCard,
-            required: true,
-            where: { user_id: userId },
-            attributes: [],
-            include: [
-              {
-                model: CoffeeShop,
-                attributes: ["name"],
-              },
-            ],
-          },
-        ],
-        order: [["added_at", "DESC"]],
-        limit: 50,
-      });
-      console.log("stamps found:", stamps.length, JSON.stringify(stamps[0]));
+    const stamps = await this.stampModel.findAll({
+      include: [
+        {
+          model: LoyaltyCard,
+          required: true,
+          where: { user_id: userId },
+          include: [
+            {
+              model: CoffeeShop,
+              attributes: ["name"],
+            },
+          ],
+        },
+      ],
+      order: [["added_at", "DESC"]],
+      limit: 50,
+    });
 
-      return stamps.map((s) => ({
-        shopName: s.loyalty_card.coffee_shop.name,
-        addedAt: s.added_at,
-      }));
-    } catch (error) {
-      console.error("getUserHistory error:", error);
-      throw error;
-    }
+    return stamps.map((s) => ({
+      shopName: s.loyalty_card?.coffee_shop?.name ?? "Unknown",
+      addedAt: s.added_at,
+    }));
   }
 }
