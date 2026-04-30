@@ -6,6 +6,7 @@ import { StampController } from "./stamp.controller";
 import { ShopModule } from "../shop/shop.module";
 import { UserModule } from "../user/user.module";
 import { LoyaltyCardModule } from "../loyalty-card/loyalty-card.module";
+import { AntiFraudModule } from "../anti-fraud/anti-fraud.module";
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { LoyaltyCardModule } from "../loyalty-card/loyalty-card.module";
         ShopModule,
         UserModule,
         LoyaltyCardModule,
+        AntiFraudModule,
     ],
     controllers: [StampController],
     providers: [StampService],

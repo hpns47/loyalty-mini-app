@@ -11,6 +11,7 @@ import { IStampResult } from "./interfaces/stamp-result.interface";
 import { ShopService } from "../shop/shop.service";
 import { UserService } from "../user/user.service";
 import { LoyaltyCardService } from "../loyalty-card/loyalty-card.service";
+import { AntiFraudService } from "../anti-fraud/anti-fraud.service";
 import { LoyaltyCard } from "../loyalty-card/entities/loyalty-card.entity";
 import { CoffeeShop } from "../shop/entities/coffee-shop.entity";
 import { IStampHistoryItem } from "./interfaces/stamp-history.interface";
@@ -27,6 +28,7 @@ export class StampService {
     private readonly loyaltyCardService: LoyaltyCardService,
     private readonly sequelize: Sequelize,
     private readonly configService: ConfigService,
+    private readonly antiFraudService: AntiFraudService,
   ) {
     this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
   }
@@ -84,6 +86,8 @@ export class StampService {
         "Stamp already added recently, please wait",
       );
     }
+
+    await this.antiFraudService.checkAndRecord(userId, shopId, quantity);
 
     const result = await this.loyaltyCardService.addStampTransaction(
       cardId,

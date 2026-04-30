@@ -70,6 +70,7 @@ export class StampController {
                     QR_TOKEN_ALREADY_USED: 409,
                     STAMP_RATE_LIMIT: 429,
                     QUANTITY_EXCEEDS_THRESHOLD: 422,
+                    DAILY_LIMIT_EXCEEDED: 429,
                 };
                 const status = statusMap[err.code] ?? 500;
                 throw new HttpException(
