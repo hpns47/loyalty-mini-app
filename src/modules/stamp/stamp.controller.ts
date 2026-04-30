@@ -5,6 +5,7 @@ import {
     Body,
     HttpException,
     InternalServerErrorException,
+    Logger,
     UseGuards,
 } from "@nestjs/common";
 import { Throttle } from "@nestjs/throttler";
@@ -24,6 +25,8 @@ import { UserService } from "../user/user.service";
 @ApiTags("Stamps")
 @Controller("api/v1/stamps")
 export class StampController {
+    private readonly logger = new Logger(StampController.name);
+
     constructor(
         private readonly stampService: StampService,
         private readonly userService: UserService,
@@ -55,12 +58,14 @@ export class StampController {
         @Body() dto: RedeemStampDto,
         @CashierShop() cashierShop: ICashierShop,
     ) {
+        this.logger.log(`redeemStamp: shopId=${cashierShop.shopId} quantity=${dto.quantity ?? 1} qrToken=${dto.qrToken?.slice(0, 20)}...`);
         try {
             const result = await this.stampService.redeemStamp(
                 dto.qrToken,
                 cashierShop.shopId,
                 dto.quantity ?? 1,
             );
+            this.logger.log(`redeemStamp: success userId=${result.cardId} newStampCount=${result.newStampCount} isRewardReady=${result.isRewardReady}`);
             return { stamp: result };
         } catch (err) {
             if (err instanceof StampError) {
@@ -73,11 +78,13 @@ export class StampController {
                     DAILY_LIMIT_EXCEEDED: 429,
                 };
                 const status = statusMap[err.code] ?? 500;
+                this.logger.warn(`redeemStamp: StampError code=${err.code} status=${status} message=${err.message}`);
                 throw new HttpException(
                     { error: { code: err.code, message: err.message } },
                     status,
                 );
             }
+            this.logger.error(`redeemStamp: unexpected error`, err instanceof Error ? err.stack : String(err));
             throw new InternalServerErrorException({
                 code: "INTERNAL_ERROR",
                 message: "Failed to redeem stamp",

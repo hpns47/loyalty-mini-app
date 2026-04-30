@@ -2,6 +2,7 @@ import {
     CanActivate,
     ExecutionContext,
     Injectable,
+    Logger,
     UnauthorizedException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -11,6 +12,7 @@ import { ICashierShop } from "../../modules/cashier/interfaces/cashier-shop.inte
 
 @Injectable()
 export class CashierAuthGuard implements CanActivate {
+    private readonly logger = new Logger(CashierAuthGuard.name);
     private readonly jwtSecret: string;
 
     constructor(private readonly configService: ConfigService) {
@@ -22,6 +24,7 @@ export class CashierAuthGuard implements CanActivate {
         const authHeader: string | undefined = request.headers["authorization"];
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            this.logger.warn("CashierAuthGuard: missing or malformed Authorization header");
             throw new UnauthorizedException({
                 code: "UNAUTHORIZED",
                 message: "Missing or invalid Authorization header",
@@ -35,7 +38,8 @@ export class CashierAuthGuard implements CanActivate {
             payload = jwt.verify(token, this.jwtSecret, {
                 algorithms: ["HS256"],
             }) as ICashierPayload;
-        } catch {
+        } catch (err) {
+            this.logger.warn(`CashierAuthGuard: JWT verification failed — ${(err as Error).message}`);
             throw new UnauthorizedException({
                 code: "UNAUTHORIZED",
                 message: "Invalid or expired cashier token",
@@ -43,6 +47,7 @@ export class CashierAuthGuard implements CanActivate {
         }
 
         if (payload.role !== "cashier") {
+            this.logger.warn(`CashierAuthGuard: token role is '${payload.role}', expected 'cashier'`);
             throw new UnauthorizedException({
                 code: "UNAUTHORIZED",
                 message: "Token is not a cashier token",
@@ -54,6 +59,7 @@ export class CashierAuthGuard implements CanActivate {
             shopSlug: payload.shopSlug,
         };
 
+        this.logger.log(`CashierAuthGuard: authenticated cashier for shop=${cashierShop.shopId} slug=${cashierShop.shopSlug}`);
         request.cashierShop = cashierShop;
         return true;
     }

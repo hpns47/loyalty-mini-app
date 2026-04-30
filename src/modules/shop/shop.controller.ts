@@ -43,6 +43,26 @@ export class ShopController {
         }
     }
 
+    @Get(":id")
+    @UseGuards(TelegramAuthGuard, RoleGuard)
+    @Roles(UserRoleEnum.MANAGER, UserRoleEnum.CHIEF)
+    async getShop(@Param("id") shopId: string) {
+        try {
+            return await this.shopService.findFullById(shopId);
+        } catch (err) {
+            if (err instanceof NotFoundException) {
+                throw new HttpException(
+                    { error: { code: "SHOP_NOT_FOUND", message: "Shop not found" } },
+                    404,
+                );
+            }
+            throw new InternalServerErrorException({
+                code: "INTERNAL_ERROR",
+                message: "Failed to fetch shop",
+            });
+        }
+    }
+
     @Get(":id/qr")
     @UseGuards(AdminAuthGuard)
     @ApiGetShopQr()
@@ -88,8 +108,7 @@ export class ShopController {
         @Body() dto: UpdateShopDto,
     ) {
         try {
-            const shop = await this.shopService.updateShop(shopId, dto);
-            return { shop };
+            return await this.shopService.updateShop(shopId, dto);
         } catch (err) {
             if (err instanceof NotFoundException) {
                 throw new HttpException(
