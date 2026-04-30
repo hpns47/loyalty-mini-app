@@ -4,6 +4,7 @@ import { User } from "../user/entities/user.entity";
 import { CoffeeShop } from "../shop/entities/coffee-shop.entity";
 import { LoyaltyCard } from "../loyalty-card/entities/loyalty-card.entity";
 import { Stamp } from "../stamp/entities/stamp.entity";
+import { UserRole } from "../role-management/entities/user-role.entity";
 
 @Module({
     imports: [
@@ -25,7 +26,7 @@ import { Stamp } from "../stamp/entities/stamp.entity";
             autoLoadModels: true,
             synchronize: false,
             retryAttempts: 3,
-            models: [User, CoffeeShop, LoyaltyCard, Stamp],
+            models: [User, CoffeeShop, LoyaltyCard, Stamp, UserRole],
         }),
     ],
     exports: [SequelizeModule],

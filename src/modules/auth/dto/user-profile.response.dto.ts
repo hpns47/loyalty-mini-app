@@ -12,6 +12,9 @@ export class UserProfileResponseDto {
 
     @ApiProperty({ example: "John" })
     first_name: string;
+
+    @ApiProperty({ example: "1995-05-15", nullable: true, type: String })
+    birthday: string | null;
 }
 
 export class AuthMeResponseDto {

@@ -114,15 +114,16 @@ export class LoyaltyCardService {
         qrTokenHash: string,
         stampThreshold: number,
         stampModel: any,
+        quantity: number = 1,
     ): Promise<{ newStampCount: number; isRewardReady: boolean }> {
         return this.sequelize.transaction(async (t) => {
             await stampModel.create(
-                { card_id: cardId, qr_token_hash: qrTokenHash },
+                { card_id: cardId, qr_token_hash: qrTokenHash, quantity },
                 { transaction: t },
             );
 
             await this.loyaltyCardModel.increment(
-                { stamp_count: 1, total_stamps_earned: 1 },
+                { stamp_count: quantity, total_stamps_earned: quantity },
                 { where: { id: cardId }, transaction: t },
             );
 

@@ -31,11 +31,18 @@ export class StampService {
     this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
   }
 
-  async redeemStamp(qrToken: string, shopId: string): Promise<IStampResult> {
+  async redeemStamp(qrToken: string, shopId: string, quantity: number = 1): Promise<IStampResult> {
     const shop = await this.shopService.findById(shopId);
 
     if (!shop) {
       throw new StampError("SHOP_NOT_FOUND", "Shop not found");
+    }
+
+    if (quantity > shop.stamp_threshold) {
+      throw new StampError(
+        "QUANTITY_EXCEEDS_THRESHOLD",
+        "Quantity cannot exceed shop stamp threshold",
+      );
     }
 
     let userId: string;
@@ -83,6 +90,7 @@ export class StampService {
       qrTokenHash,
       shop.stamp_threshold,
       this.stampModel,
+      quantity,
     );
 
     const userName = await this.userService.getFirstName(userId);
@@ -118,6 +126,7 @@ export class StampService {
     return stamps.map((s) => ({
       shopName: s.loyalty_card?.coffee_shop?.name ?? "Unknown",
       addedAt: s.added_at,
+      quantity: s.quantity,
     }));
   }
 }

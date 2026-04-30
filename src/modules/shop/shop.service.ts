@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { CoffeeShop } from "./entities/coffee-shop.entity";
 import { IShopSummary } from "./interfaces/shop-summary.interface";
+import { UpdateShopDto } from "./dto/update-shop.dto";
 
 @Injectable()
 export class ShopService {
@@ -54,5 +55,22 @@ export class ShopService {
             id: shop.id,
             cashier_key_hash: shop.cashier_key_hash,
         };
+    }
+
+    async findFullById(shopId: string): Promise<CoffeeShop> {
+        const shop = await this.coffeeShopModel.findByPk(shopId);
+        if (!shop) {
+            throw new NotFoundException({ code: "SHOP_NOT_FOUND", message: "Shop not found" });
+        }
+        return shop;
+    }
+
+    async updateShop(shopId: string, dto: UpdateShopDto): Promise<CoffeeShop> {
+        const shop = await this.coffeeShopModel.findByPk(shopId);
+        if (!shop) {
+            throw new NotFoundException({ code: "SHOP_NOT_FOUND", message: "Shop not found" });
+        }
+        await shop.update(dto);
+        return shop;
     }
 }

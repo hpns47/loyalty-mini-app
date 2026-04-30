@@ -59,6 +59,7 @@ export class StampController {
             const result = await this.stampService.redeemStamp(
                 dto.qrToken,
                 cashierShop.shopId,
+                dto.quantity ?? 1,
             );
             return { stamp: result };
         } catch (err) {
@@ -68,6 +69,7 @@ export class StampController {
                     QR_TOKEN_INVALID: 401,
                     QR_TOKEN_ALREADY_USED: 409,
                     STAMP_RATE_LIMIT: 429,
+                    QUANTITY_EXCEEDS_THRESHOLD: 422,
                 };
                 const status = statusMap[err.code] ?? 500;
                 throw new HttpException(

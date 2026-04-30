@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ForbiddenException, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/sequelize";
 import { User } from "./entities/user.entity";
 import { ITelegramUser } from "../auth/interfaces/telegram-user.interface";
@@ -44,7 +44,24 @@ export class UserService {
             telegram_id: user.telegram_id,
             username: user.username,
             first_name: user.first_name,
+            birthday: user.birthday,
         };
+    }
+
+    async setBirthday(userId: string, birthday: string): Promise<void> {
+        const user = await this.userModel.findByPk(userId, {
+            attributes: ["id", "birthday"],
+        });
+
+        if (!user) {
+            throw new NotFoundException({ code: "USER_NOT_FOUND", message: "User not found" });
+        }
+
+        if (user.birthday !== null) {
+            throw new ForbiddenException({ code: "BIRTHDAY_ALREADY_SET", message: "Birthday can only be set once" });
+        }
+
+        await user.update({ birthday });
     }
 
     async getFirstName(userId: string): Promise<string> {

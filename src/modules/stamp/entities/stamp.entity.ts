@@ -28,6 +28,9 @@ export class Stamp extends Model {
     @Column({ type: DataType.TEXT, unique: true, allowNull: true })
     declare qr_token_hash: string | null;
 
+    @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 1 })
+    declare quantity: number;
+
     @Column({
         type: DataType.DATE,
         defaultValue: DataType.NOW,

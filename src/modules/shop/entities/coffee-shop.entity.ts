@@ -42,6 +42,24 @@ export class CoffeeShop extends Model {
     })
     declare category: ShopCategory;
 
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare logo_url: string | null;
+
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare address: string | null;
+
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare phone: string | null;
+
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare reward_type: string | null;
+
+    @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
+    declare birthday_gift_enabled: boolean;
+
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare birthday_gift_description: string | null;
+
     @CreatedAt
     @Column({ field: "created_at" })
     declare created_at: Date;

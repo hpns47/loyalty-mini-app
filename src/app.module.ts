@@ -14,6 +14,8 @@ import { StampModule } from "./modules/stamp/stamp.module";
 import { CashierModule } from "./modules/cashier/cashier.module";
 import { RewardModule } from "./modules/reward/reward.module";
 import { QrModule } from "./modules/qr/qr.module";
+import { RoleManagementModule } from "./modules/role-management/role-management.module";
+import { AnalyticsModule } from "./modules/analytics/analytics.module";
 
 @Module({
     imports: [
@@ -33,6 +35,8 @@ import { QrModule } from "./modules/qr/qr.module";
         CashierModule,
         RewardModule,
         QrModule,
+        RoleManagementModule,
+        AnalyticsModule,
     ],
     controllers: [AppController],
     providers: [

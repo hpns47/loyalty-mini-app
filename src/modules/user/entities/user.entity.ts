@@ -30,6 +30,9 @@ export class User extends Model {
     @Column({ type: DataType.TEXT, allowNull: true })
     declare last_name: string | null;
 
+    @Column({ type: DataType.DATEONLY, allowNull: true })
+    declare birthday: string | null;
+
     @CreatedAt
     @Column({ field: "created_at" })
     declare created_at: Date;
