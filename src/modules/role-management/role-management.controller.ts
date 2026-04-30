@@ -104,6 +104,17 @@ export class RoleManagementController {
         }
     }
 
+    @Get("my")
+    @UseGuards(TelegramAuthGuard)
+    async getMyRoles(@TelegramUser() telegramUser: ITelegramUser) {
+        try {
+            const roles = await this.roleManagementService.getMyRoles(telegramUser.id);
+            return { roles };
+        } catch {
+            throw new InternalServerErrorException({ code: "INTERNAL_ERROR" });
+        }
+    }
+
     @Get("staff/:shopId")
     @UseGuards(TelegramAuthGuard, RoleGuard)
     @Roles(UserRoleEnum.MANAGER, UserRoleEnum.CHIEF)

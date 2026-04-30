@@ -6,7 +6,14 @@ import {
 import { InjectModel } from "@nestjs/sequelize";
 import { UserRole, UserRoleEnum } from "./entities/user-role.entity";
 import { User } from "../user/entities/user.entity";
+import { CoffeeShop } from "../shop/entities/coffee-shop.entity";
 import { IStaffMember } from "./interfaces/staff-member.interface";
+
+export interface IMyRole {
+    shopId: string;
+    shopName: string;
+    role: UserRoleEnum;
+}
 
 @Injectable()
 export class RoleManagementService {
@@ -117,6 +124,22 @@ export class RoleManagementService {
         await this.userRoleModel.destroy({
             where: { user_id: targetUserId, shop_id: shopId },
         });
+    }
+
+    async getMyRoles(telegramId: number): Promise<IMyRole[]> {
+        const userId = await this.getUserIdByTelegramId(telegramId);
+        if (!userId) return [];
+
+        const records = await this.userRoleModel.findAll({
+            where: { user_id: userId },
+            include: [{ model: CoffeeShop, attributes: ["id", "name"] }],
+        });
+
+        return records.map((r) => ({
+            shopId: r.shop_id,
+            shopName: (r as any).coffee_shop?.name ?? "",
+            role: r.role,
+        }));
     }
 
     async listStaff(shopId: string): Promise<IStaffMember[]> {
