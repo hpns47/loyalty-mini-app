@@ -17,6 +17,7 @@ import { QrModule } from "./modules/qr/qr.module";
 import { RoleManagementModule } from "./modules/role-management/role-management.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { BotModule } from "./modules/bot/bot.module";
+import { AdminModule } from "./modules/admin/admin.module";
 
 @Module({
     imports: [
@@ -39,6 +40,7 @@ import { BotModule } from "./modules/bot/bot.module";
         RoleManagementModule,
         AnalyticsModule,
         BotModule,
+        AdminModule,
     ],
     controllers: [AppController],
     providers: [
