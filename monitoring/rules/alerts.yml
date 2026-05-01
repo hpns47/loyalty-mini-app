@@ -38,7 +38,7 @@ groups:
           severity: warning
         annotations:
           summary: "High Node.js memory usage"
-          description: "Node.js external memory is {{ $value | humanizeBytes }}."
+          description: "Node.js external memory is {{ $value | humanize1024 }}B."
 
       - alert: HighCPU
         expr: |
