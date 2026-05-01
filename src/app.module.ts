@@ -18,6 +18,7 @@ import { RoleManagementModule } from "./modules/role-management/role-management.
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { BotModule } from "./modules/bot/bot.module";
 import { AdminModule } from "./modules/admin/admin.module";
+import { MetricsModule } from "./modules/metrics/metrics.module";
 
 @Module({
     imports: [
@@ -41,6 +42,7 @@ import { AdminModule } from "./modules/admin/admin.module";
         AnalyticsModule,
         BotModule,
         AdminModule,
+        MetricsModule,
     ],
     controllers: [AppController],
     providers: [

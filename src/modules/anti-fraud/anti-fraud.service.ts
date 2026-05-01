@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { CacheService } from "../cache/cache.service";
 import { StampError } from "../stamp/interfaces/stamp-error";
+import { MetricsService } from "../metrics/metrics.service";
 
 const DAILY_STAMP_LIMIT = 20;
 
@@ -8,7 +9,10 @@ const DAILY_STAMP_LIMIT = 20;
 export class AntiFraudService {
     private readonly logger = new Logger(AntiFraudService.name);
 
-    constructor(private readonly cacheService: CacheService) {}
+    constructor(
+        private readonly cacheService: CacheService,
+        private readonly metricsService: MetricsService,
+    ) {}
 
     private dailyKey(userId: string, shopId: string): string {
         const today = new Date().toISOString().slice(0, 10);
@@ -34,6 +38,7 @@ export class AntiFraudService {
 
         if (current + quantity > DAILY_STAMP_LIMIT) {
             this.logger.warn(`checkAndRecord: DAILY_LIMIT_EXCEEDED userId=${userId} shopId=${shopId} current=${current} requested=${quantity}`);
+            this.metricsService.antiFraudBlocked.inc();
             throw new StampError(
                 "DAILY_LIMIT_EXCEEDED",
                 `Daily stamp limit (${DAILY_STAMP_LIMIT}) reached for this shop`,

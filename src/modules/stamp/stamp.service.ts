@@ -15,6 +15,7 @@ import { AntiFraudService } from "../anti-fraud/anti-fraud.service";
 import { LoyaltyCard } from "../loyalty-card/entities/loyalty-card.entity";
 import { CoffeeShop } from "../shop/entities/coffee-shop.entity";
 import { IStampHistoryItem } from "./interfaces/stamp-history.interface";
+import { MetricsService } from "../metrics/metrics.service";
 
 @Injectable()
 export class StampService {
@@ -30,6 +31,7 @@ export class StampService {
     private readonly sequelize: Sequelize,
     private readonly configService: ConfigService,
     private readonly antiFraudService: AntiFraudService,
+    private readonly metricsService: MetricsService,
   ) {
     this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
   }
@@ -41,6 +43,7 @@ export class StampService {
 
     if (!shop) {
       this.logger.warn(`redeemStamp: shop not found shopId=${shopId}`);
+      this.metricsService.stampErrors.inc({ code: "SHOP_NOT_FOUND" });
       throw new StampError("SHOP_NOT_FOUND", "Shop not found");
     }
 
@@ -48,6 +51,7 @@ export class StampService {
 
     if (quantity > shop.stamp_threshold) {
       this.logger.warn(`redeemStamp: quantity=${quantity} exceeds threshold=${shop.stamp_threshold}`);
+      this.metricsService.stampErrors.inc({ code: "QUANTITY_EXCEEDS_THRESHOLD" });
       throw new StampError(
         "QUANTITY_EXCEEDS_THRESHOLD",
         "Quantity cannot exceed shop stamp threshold",
@@ -63,6 +67,7 @@ export class StampService {
       this.logger.log(`redeemStamp: QR token valid userId=${userId}`);
     } catch (err) {
       this.logger.warn(`redeemStamp: QR token verification failed — ${(err as Error).message}`);
+      this.metricsService.stampErrors.inc({ code: "QR_TOKEN_INVALID" });
       throw new StampError("QR_TOKEN_INVALID", "Invalid or expired QR token");
     }
 
@@ -77,6 +82,7 @@ export class StampService {
 
     if (dupeCount > 0) {
       this.logger.warn(`redeemStamp: QR token already used hash=${qrTokenHash.slice(0, 12)}...`);
+      this.metricsService.stampErrors.inc({ code: "QR_TOKEN_ALREADY_USED" });
       throw new StampError(
         "QR_TOKEN_ALREADY_USED",
         "QR code has already been redeemed",
@@ -93,6 +99,7 @@ export class StampService {
 
     if (recentCount > 0) {
       this.logger.warn(`redeemStamp: rate limit hit cardId=${cardId} (stamp added within last 10s)`);
+      this.metricsService.stampErrors.inc({ code: "STAMP_RATE_LIMIT" });
       throw new StampError(
         "STAMP_RATE_LIMIT",
         "Stamp already added recently, please wait",
@@ -111,6 +118,8 @@ export class StampService {
     );
 
     this.logger.log(`redeemStamp: transaction complete newStampCount=${result.newStampCount} isRewardReady=${result.isRewardReady}`);
+
+    this.metricsService.stampsRedeemed.inc({ shop_slug: shop.slug ?? shop.name });
 
     const userName = await this.userService.getFirstName(userId);
 

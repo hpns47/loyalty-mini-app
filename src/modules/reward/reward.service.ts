@@ -4,12 +4,14 @@ import {
 } from "@nestjs/common";
 import { ShopService } from "../shop/shop.service";
 import { LoyaltyCardService } from "../loyalty-card/loyalty-card.service";
+import { MetricsService } from "../metrics/metrics.service";
 
 @Injectable()
 export class RewardService {
     constructor(
         private readonly shopService: ShopService,
         private readonly loyaltyCardService: LoyaltyCardService,
+        private readonly metricsService: MetricsService,
     ) {}
 
     async redeem(
@@ -36,6 +38,8 @@ export class RewardService {
         }
 
         await this.loyaltyCardService.resetCard(cardId);
+
+        this.metricsService.rewardsRedeemed.inc({ shop_slug: shop.slug });
 
         return { success: true };
     }

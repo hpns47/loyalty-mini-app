@@ -99,6 +99,93 @@ services:
         profiles:
             - production
 
+    prometheus:
+        image: prom/prometheus:v2.49.1
+        container_name: "${APP_NAME}_PROMETHEUS"
+        restart: unless-stopped
+        volumes:
+            - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+            - ./monitoring/rules:/etc/prometheus/rules:ro
+            - prometheus_data:/prometheus
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - '--storage.tsdb.retention.time=30d'
+            - '--web.enable-lifecycle'
+            - '--web.listen-address=:9090'
+        networks:
+            - production-network
+        profiles:
+            - production
+
+    grafana:
+        image: grafana/grafana:10.3.1
+        container_name: "${APP_NAME}_GRAFANA"
+        restart: unless-stopped
+        environment:
+            GF_SECURITY_ADMIN_USER: admin
+            GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD}"
+            GF_SERVER_ROOT_URL: "https://grafana.hpns47.xyz"
+            GF_SMTP_ENABLED: "false"
+            GF_UNIFIED_ALERTING_ENABLED: "true"
+            GF_ALERTING_ENABLED: "false"
+        volumes:
+            - grafana_data:/var/lib/grafana
+            - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+        ports:
+            - "127.0.0.1:3100:3000"
+        networks:
+            - production-network
+        depends_on:
+            - prometheus
+        profiles:
+            - production
+
+    node-exporter:
+        image: prom/node-exporter:v1.7.0
+        container_name: "${APP_NAME}_NODE_EXPORTER"
+        restart: unless-stopped
+        pid: host
+        volumes:
+            - /proc:/host/proc:ro
+            - /sys:/host/sys:ro
+            - /:/rootfs:ro
+        command:
+            - '--path.procfs=/host/proc'
+            - '--path.rootfs=/rootfs'
+            - '--path.sysfs=/host/sys'
+            - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+        networks:
+            - production-network
+        profiles:
+            - production
+
+    postgres-exporter:
+        image: prometheuscommunity/postgres-exporter:v0.15.0
+        container_name: "${APP_NAME}_POSTGRES_EXPORTER"
+        restart: unless-stopped
+        environment:
+            DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+        networks:
+            - production-network
+        depends_on:
+            - postgres
+        profiles:
+            - production
+
+    redis-exporter:
+        image: oliver006/redis_exporter:v1.58.0
+        container_name: "${APP_NAME}_REDIS_EXPORTER"
+        restart: unless-stopped
+        environment:
+            REDIS_ADDR: "redis://redis:6379"
+            REDIS_PASSWORD: "${REDIS_PASSWORD}"
+        networks:
+            - production-network
+        depends_on:
+            - redis
+        profiles:
+            - production
+
 networks:
     development-network:
         driver: bridge
@@ -110,3 +197,5 @@ volumes:
     redis_data:
     node_modules:
     backups:
+    prometheus_data:
+    grafana_data:

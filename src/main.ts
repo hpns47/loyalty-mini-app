@@ -4,6 +4,8 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { I18nService } from "nestjs-i18n";
 import { ValidationPipe } from "./infrastructure/pipes/validation.pipe";
 import helmet from "helmet";
+import { MetricsInterceptor } from "./infrastructure/interceptors/metrics.interceptor";
+import { MetricsService } from "./modules/metrics/metrics.service";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -78,6 +80,10 @@ async function bootstrap() {
     // Validation
     const validationPipe = new ValidationPipe(app.get(I18nService));
     app.useGlobalPipes(validationPipe);
+
+    // Metrics
+    const metricsService = app.get(MetricsService);
+    app.useGlobalInterceptors(new MetricsInterceptor(metricsService));
 
     await app.listen(process.env.APP_PORT ?? 3000);
 }
