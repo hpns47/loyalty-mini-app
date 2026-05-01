@@ -28,7 +28,7 @@ export class ShopService {
 
     async findById(shopId: string): Promise<IShopBasic | null> {
         const shop = await this.coffeeShopModel.findByPk(shopId, {
-            attributes: ["id", "name", "cashier_key_hash", "stamp_threshold"],
+            attributes: ["id", "name", "slug", "cashier_key_hash", "stamp_threshold"],
         });
 
         if (!shop) return null;
@@ -36,6 +36,7 @@ export class ShopService {
         return {
             id: shop.id,
             name: shop.name,
+            slug: shop.slug,
             cashier_key_hash: shop.cashier_key_hash,
             stamp_threshold: shop.stamp_threshold,
         };

@@ -119,7 +119,7 @@ export class StampService {
 
     this.logger.log(`redeemStamp: transaction complete newStampCount=${result.newStampCount} isRewardReady=${result.isRewardReady}`);
 
-    this.metricsService.stampsRedeemed.inc({ shop_slug: shop.slug ?? shop.name });
+    this.metricsService.stampsRedeemed.inc({ shop_slug: shop.slug });
 
     const userName = await this.userService.getFirstName(userId);
 
