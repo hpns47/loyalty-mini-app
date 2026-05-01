@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { Sequelize } from "sequelize-typescript";
 import { QueryTypes } from "sequelize";
+import * as bcrypt from "bcryptjs";
 
 @Injectable()
 export class AdminService {
@@ -193,12 +194,12 @@ export class AdminService {
             JOIN loyalty_cards lc ON s.card_id = lc.id
             JOIN users u ON lc.user_id = u.id
             JOIN coffee_shops cs ON lc.shop_id = cs.id
-            WHERE (:shopId = '' OR cs.id = :shopId)
-              AND (:date = '' OR DATE(s.added_at AT TIME ZONE 'UTC') = :date::date)
+            WHERE (:shopId::uuid IS NULL OR cs.id = :shopId::uuid)
+              AND (:date IS NULL OR DATE(s.added_at AT TIME ZONE 'UTC') = :date::date)
             ORDER BY s.added_at DESC
             LIMIT :limit OFFSET :offset`,
             {
-                replacements: { shopId: shopId || "", date: date || "", limit, offset },
+                replacements: { shopId: shopId || null, date: date || null, limit, offset },
                 type: QueryTypes.SELECT,
             },
         );
@@ -207,10 +208,10 @@ export class AdminService {
             `SELECT COUNT(*)::int AS total FROM stamps s
              JOIN loyalty_cards lc ON s.card_id = lc.id
              JOIN coffee_shops cs ON lc.shop_id = cs.id
-             WHERE (:shopId = '' OR cs.id = :shopId)
-               AND (:date = '' OR DATE(s.added_at AT TIME ZONE 'UTC') = :date::date)`,
+             WHERE (:shopId::uuid IS NULL OR cs.id = :shopId::uuid)
+               AND (:date IS NULL OR DATE(s.added_at AT TIME ZONE 'UTC') = :date::date)`,
             {
-                replacements: { shopId: shopId || "", date: date || "" },
+                replacements: { shopId: shopId || null, date: date || null },
                 type: QueryTypes.SELECT,
             },
         );
@@ -280,9 +281,29 @@ export class AdminService {
             stamp_threshold: string;
             category: string;
             created_at: string;
+            logo_url: string | null;
+            address: string | null;
+            phone: string | null;
+            reward_type: string | null;
+            birthday_gift_enabled: boolean;
+            birthday_gift_description: string | null;
+            total_customers: string;
+            total_stamps: string;
+            reward_ready_count: string;
+            staff_count: string;
         }>(
-            `SELECT id, name, slug, stamp_threshold, category, created_at
-             FROM coffee_shops WHERE id = :shopId`,
+            `SELECT cs.id, cs.name, cs.slug, cs.stamp_threshold, cs.category, cs.created_at,
+                cs.logo_url, cs.address, cs.phone, cs.reward_type,
+                cs.birthday_gift_enabled, cs.birthday_gift_description,
+                COUNT(DISTINCT lc.user_id)::int                             AS total_customers,
+                COALESCE(SUM(lc.total_stamps_earned), 0)::int               AS total_stamps,
+                COUNT(*) FILTER (WHERE lc.status = 'reward_ready')::int     AS reward_ready_count,
+                COUNT(DISTINCT ur.user_id)::int                             AS staff_count
+             FROM coffee_shops cs
+             LEFT JOIN loyalty_cards lc ON cs.id = lc.shop_id
+             LEFT JOIN user_roles ur ON cs.id = ur.shop_id
+             WHERE cs.id = :shopId
+             GROUP BY cs.id`,
             { replacements: { shopId }, type: QueryTypes.SELECT },
         );
 
@@ -327,6 +348,16 @@ export class AdminService {
             stampThreshold: Number(shop.stamp_threshold),
             category: shop.category,
             createdAt: shop.created_at,
+            logoUrl: shop.logo_url,
+            address: shop.address,
+            phone: shop.phone,
+            rewardType: shop.reward_type,
+            birthdayGiftEnabled: shop.birthday_gift_enabled,
+            birthdayGiftDescription: shop.birthday_gift_description,
+            totalCustomers: Number(shop.total_customers),
+            totalStamps: Number(shop.total_stamps),
+            rewardReadyCount: Number(shop.reward_ready_count),
+            staffCount: Number(shop.staff_count),
             staff: staff.map((s) => ({
                 userId: s.user_id,
                 firstName: s.first_name,
@@ -339,5 +370,114 @@ export class AdminService {
                 quantityTotal: Number(d.quantity_total),
             })),
         };
+    }
+
+    async createShop(data: {
+        name: string;
+        slug: string;
+        category: string;
+        stampThreshold: number;
+        cashierKey: string;
+        logoUrl?: string;
+        address?: string;
+        phone?: string;
+        rewardType?: string;
+    }) {
+        const hash = await bcrypt.hash(data.cashierKey, 10);
+        await this.sequelize.query(
+            `INSERT INTO coffee_shops (id, name, slug, cashier_key_hash, stamp_threshold, category, logo_url, address, phone, reward_type)
+             VALUES (gen_random_uuid(), :name, :slug, :hash, :threshold, :category, :logoUrl, :address, :phone, :rewardType)
+             RETURNING id`,
+            {
+                replacements: {
+                    name: data.name,
+                    slug: data.slug,
+                    hash,
+                    threshold: data.stampThreshold,
+                    category: data.category,
+                    logoUrl: data.logoUrl || null,
+                    address: data.address || null,
+                    phone: data.phone || null,
+                    rewardType: data.rewardType || null,
+                },
+                type: QueryTypes.INSERT,
+            },
+        );
+    }
+
+    async updateShop(
+        shopId: string,
+        data: {
+            name?: string;
+            category?: string;
+            stampThreshold?: number;
+            logoUrl?: string;
+            address?: string;
+            phone?: string;
+            rewardType?: string;
+            birthdayGiftEnabled?: boolean;
+            birthdayGiftDescription?: string;
+        },
+    ) {
+        const fields: string[] = [];
+        const replacements: Record<string, any> = { shopId };
+        if (data.name !== undefined) { fields.push("name = :name"); replacements.name = data.name; }
+        if (data.category !== undefined) { fields.push("category = :category"); replacements.category = data.category; }
+        if (data.stampThreshold !== undefined) { fields.push("stamp_threshold = :threshold"); replacements.threshold = data.stampThreshold; }
+        if (data.logoUrl !== undefined) { fields.push("logo_url = :logoUrl"); replacements.logoUrl = data.logoUrl || null; }
+        if (data.address !== undefined) { fields.push("address = :address"); replacements.address = data.address || null; }
+        if (data.phone !== undefined) { fields.push("phone = :phone"); replacements.phone = data.phone || null; }
+        if (data.rewardType !== undefined) { fields.push("reward_type = :rewardType"); replacements.rewardType = data.rewardType || null; }
+        if (data.birthdayGiftEnabled !== undefined) { fields.push("birthday_gift_enabled = :bgEnabled"); replacements.bgEnabled = data.birthdayGiftEnabled; }
+        if (data.birthdayGiftDescription !== undefined) { fields.push("birthday_gift_description = :bgDesc"); replacements.bgDesc = data.birthdayGiftDescription || null; }
+        if (!fields.length) return;
+        await this.sequelize.query(
+            `UPDATE coffee_shops SET ${fields.join(", ")} WHERE id = :shopId`,
+            { replacements, type: QueryTypes.UPDATE },
+        );
+    }
+
+    async setStaffRole(shopId: string, userId: string, role: string) {
+        await this.sequelize.query(
+            `INSERT INTO user_roles (id, user_id, shop_id, role)
+             VALUES (gen_random_uuid(), :userId, :shopId, :role)
+             ON CONFLICT (user_id, shop_id) DO UPDATE SET role = :role`,
+            { replacements: { userId, shopId, role }, type: QueryTypes.INSERT },
+        );
+    }
+
+    async removeStaffRole(shopId: string, userId: string) {
+        await this.sequelize.query(
+            `DELETE FROM user_roles WHERE shop_id = :shopId AND user_id = :userId`,
+            { replacements: { shopId, userId }, type: QueryTypes.DELETE },
+        );
+    }
+
+    async regenerateCashierKey(shopId: string, newKey: string) {
+        const hash = await bcrypt.hash(newKey, 10);
+        await this.sequelize.query(
+            `UPDATE coffee_shops SET cashier_key_hash = :hash WHERE id = :shopId`,
+            { replacements: { hash, shopId }, type: QueryTypes.UPDATE },
+        );
+    }
+
+    async lookupUser(query: string) {
+        const rows = await this.sequelize.query<{
+            id: string;
+            username: string | null;
+            first_name: string;
+            telegram_id: string;
+        }>(
+            `SELECT id, username, first_name, telegram_id FROM users
+             WHERE username ILIKE :q OR telegram_id::text = :exact
+             LIMIT 10`,
+            { replacements: { q: `%${query}%`, exact: query }, type: QueryTypes.SELECT },
+        );
+        return rows.map((r) => ({
+            id: r.id,
+            username: r.username,
+            firstName: r.first_name,
+            telegramId: r.telegram_id,
+        }));
     }
 }
