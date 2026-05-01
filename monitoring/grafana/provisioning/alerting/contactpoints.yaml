@@ -4,10 +4,17 @@ contactPoints:
   - orgId: 1
     name: Telegram Loyalty
     receivers:
-      - uid: telegram-loyalty-bot
+      - uid: telegram-loyalty-diar
         type: telegram
         settings:
           bottoken: "${BOT_TOKEN}"
           chatid: "414691661"
+          parseMode: "HTML"
+        disableResolveMessage: false
+      - uid: telegram-loyalty-daniyar
+        type: telegram
+        settings:
+          bottoken: "${BOT_TOKEN}"
+          chatid: "948100746"
           parseMode: "HTML"
         disableResolveMessage: false
