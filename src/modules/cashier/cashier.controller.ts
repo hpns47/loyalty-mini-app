@@ -16,7 +16,7 @@ export class CashierController {
     @Throttle({ strict: { ttl: 60_000, limit: 10 } })
     @ApiCashierLogin()
     async login(@Body() dto: ValidateCashierDto) {
-        return this.cashierService.login(dto.shopSlug, dto.cashierKey);
+        return this.cashierService.login(dto.shopSlug, dto.cashierKey, dto.username);
     }
 
     @Post("logout")

@@ -57,9 +57,12 @@ export class CashierAuthGuard implements CanActivate {
         const cashierShop: ICashierShop = {
             shopId: payload.sub,
             shopSlug: payload.shopSlug,
+            ...(payload.userId ? { userId: payload.userId } : {}),
         };
 
-        this.logger.log(`CashierAuthGuard: authenticated cashier for shop=${cashierShop.shopId} slug=${cashierShop.shopSlug}`);
+        this.logger.log(
+            `CashierAuthGuard: authenticated — shopId=${cashierShop.shopId} slug="${cashierShop.shopSlug}" userId=${cashierShop.userId ?? "anonymous"}`,
+        );
         request.cashierShop = cashierShop;
         return true;
     }

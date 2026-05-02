@@ -64,6 +64,13 @@ export class UserService {
         await user.update({ birthday });
     }
 
+    async findByUsername(username: string): Promise<User | null> {
+        return this.userModel.findOne({
+            where: { username },
+            attributes: ["id", "username", "first_name"],
+        });
+    }
+
     async getFirstName(userId: string): Promise<string> {
         const user = await this.userModel.findByPk(userId, {
             attributes: ["first_name"],

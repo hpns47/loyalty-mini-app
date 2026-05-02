@@ -1,5 +1,5 @@
-import { IsString, MinLength } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { IsString, MinLength, IsOptional } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class ValidateCashierDto {
     @ApiProperty({ description: "Slug кофейни", example: "my-coffee-shop" })
@@ -11,4 +11,9 @@ export class ValidateCashierDto {
     @IsString()
     @MinLength(1)
     declare cashierKey: string;
+
+    @ApiPropertyOptional({ description: "Telegram @username кассира (без @)", example: "johndoe" })
+    @IsOptional()
+    @IsString()
+    declare username?: string;
 }
