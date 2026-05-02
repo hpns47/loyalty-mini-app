@@ -43,6 +43,25 @@ export class ShopController {
         }
     }
 
+    @Get(":id/public")
+    @UseGuards(TelegramAuthGuard)
+    async getShopPublic(@Param("id") shopId: string) {
+        try {
+            return await this.shopService.findPublicById(shopId);
+        } catch (err) {
+            if (err instanceof NotFoundException) {
+                throw new HttpException(
+                    { error: { code: "SHOP_NOT_FOUND", message: "Shop not found" } },
+                    404,
+                );
+            }
+            throw new InternalServerErrorException({
+                code: "INTERNAL_ERROR",
+                message: "Failed to fetch shop",
+            });
+        }
+    }
+
     @Get(":id")
     @UseGuards(TelegramAuthGuard, RoleGuard)
     @Roles(UserRoleEnum.MANAGER, UserRoleEnum.CHIEF)
