@@ -156,6 +156,30 @@ export class LoyaltyCardService {
         });
     }
 
+    async getHiddenCards(userId: string): Promise<ICardWithShopResponse[]> {
+        const cards = await this.loyaltyCardModel.findAll({
+            where: { user_id: userId, is_hidden: true },
+            include: [
+                {
+                    model: CoffeeShop,
+                    attributes: ["name", "stamp_threshold", "category", "logo_url", "card_bg_color"],
+                },
+            ],
+        });
+
+        return cards.map((card) => ({
+            id: card.id,
+            shop_id: card.shop_id,
+            shop_name: card.coffee_shop.name,
+            shop_category: card.coffee_shop.category,
+            stamp_count: card.stamp_count,
+            status: card.status,
+            stamp_threshold: card.coffee_shop.stamp_threshold,
+            shop_logo_url: card.coffee_shop.logo_url ?? null,
+            card_bg_color: card.coffee_shop.card_bg_color ?? null,
+        }));
+    }
+
     async hideCard(userId: string, shopId: string): Promise<void> {
         await this.loyaltyCardModel.update(
             { is_hidden: true },

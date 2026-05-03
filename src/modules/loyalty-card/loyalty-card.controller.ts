@@ -40,6 +40,17 @@ export class LoyaltyCardController {
         }
     }
 
+    @Get("hidden")
+    async getHiddenCards(@TelegramUser() telegramUser: ITelegramUser) {
+        try {
+            const userId = await this.userService.getUserIdByTelegramId(telegramUser.id);
+            const cards = await this.loyaltyCardService.getHiddenCards(userId);
+            return { cards };
+        } catch {
+            throw new InternalServerErrorException({ code: "INTERNAL_ERROR", message: "Failed to fetch hidden cards" });
+        }
+    }
+
     @Patch(":shopId/hide")
     @ApiHideCard()
     async hideCard(
