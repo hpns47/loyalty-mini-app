@@ -4,4 +4,5 @@ export interface IStampResult {
     isRewardReady: boolean;
     userName: string;
     stampThreshold: number;
+    shopName: string;
 }

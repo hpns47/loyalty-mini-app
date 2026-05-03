@@ -60,6 +60,9 @@ export class CoffeeShop extends Model {
     @Column({ type: DataType.TEXT, allowNull: true })
     declare birthday_gift_description: string | null;
 
+    @Column({ type: DataType.TEXT, allowNull: true })
+    declare card_bg_color: string | null;
+
     @CreatedAt
     @Column({ field: "created_at" })
     declare created_at: Date;

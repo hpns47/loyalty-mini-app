@@ -27,15 +27,22 @@ export class LoyaltyCardService {
                 shop_id: shopId,
                 stamp_count: 0,
                 status: "active",
+                is_hidden: false,
             } as any,
         });
+
+        // Re-show card if it was hidden (user navigated to this shop again)
+        await this.loyaltyCardModel.update(
+            { is_hidden: false },
+            { where: { user_id: userId, shop_id: shopId, is_hidden: true } },
+        );
 
         const card = await this.loyaltyCardModel.findOne({
             where: { user_id: userId, shop_id: shopId },
             include: [
                 {
                     model: CoffeeShop,
-                    attributes: ["stamp_threshold"],
+                    attributes: ["stamp_threshold", "card_bg_color"],
                 },
             ],
             rejectOnEmpty: true,
@@ -47,16 +54,17 @@ export class LoyaltyCardService {
             stamp_count: card.stamp_count,
             status: card.status,
             stamp_threshold: card.coffee_shop.stamp_threshold,
+            card_bg_color: card.coffee_shop.card_bg_color ?? null,
         };
     }
 
     async getCards(userId: string): Promise<ICardWithShopResponse[]> {
         const cards = await this.loyaltyCardModel.findAll({
-            where: { user_id: userId },
+            where: { user_id: userId, is_hidden: false },
             include: [
                 {
                     model: CoffeeShop,
-                    attributes: ["name", "stamp_threshold", "category"],
+                    attributes: ["name", "stamp_threshold", "category", "logo_url", "card_bg_color"],
                 },
             ],
         });
@@ -69,6 +77,8 @@ export class LoyaltyCardService {
             stamp_count: card.stamp_count,
             status: card.status,
             stamp_threshold: card.coffee_shop.stamp_threshold,
+            shop_logo_url: card.coffee_shop.logo_url ?? null,
+            card_bg_color: card.coffee_shop.card_bg_color ?? null,
         }));
     }
 
@@ -144,5 +154,19 @@ export class LoyaltyCardService {
 
             return { newStampCount, isRewardReady };
         });
+    }
+
+    async hideCard(userId: string, shopId: string): Promise<void> {
+        await this.loyaltyCardModel.update(
+            { is_hidden: true },
+            { where: { user_id: userId, shop_id: shopId } },
+        );
+    }
+
+    async showCard(userId: string, shopId: string): Promise<void> {
+        await this.loyaltyCardModel.update(
+            { is_hidden: false },
+            { where: { user_id: userId, shop_id: shopId } },
+        );
     }
 }

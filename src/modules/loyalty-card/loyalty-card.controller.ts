@@ -1,6 +1,7 @@
 import {
     Controller,
     Get,
+    Patch,
     Param,
     UseGuards,
     InternalServerErrorException,
@@ -11,7 +12,7 @@ import { TelegramUser } from "../../infrastructure/decorators/telegram-user.deco
 import { ITelegramUser } from "../auth/interfaces/telegram-user.interface";
 import { LoyaltyCardService } from "./loyalty-card.service";
 import { UserService } from "../user/user.service";
-import { ApiGetCards, ApiGetOrCreateCard } from "./swagger/api-loyalty-card.decorator";
+import { ApiGetCards, ApiGetOrCreateCard, ApiHideCard, ApiShowCard } from "./swagger/api-loyalty-card.decorator";
 
 @ApiTags("Cards")
 @Controller("api/v1/cards")
@@ -36,6 +37,36 @@ export class LoyaltyCardController {
                 code: "INTERNAL_ERROR",
                 message: "Failed to fetch cards",
             });
+        }
+    }
+
+    @Patch(":shopId/hide")
+    @ApiHideCard()
+    async hideCard(
+        @TelegramUser() telegramUser: ITelegramUser,
+        @Param("shopId") shopId: string,
+    ) {
+        try {
+            const userId = await this.userService.getUserIdByTelegramId(telegramUser.id);
+            await this.loyaltyCardService.hideCard(userId, shopId);
+            return { success: true };
+        } catch {
+            throw new InternalServerErrorException({ code: "INTERNAL_ERROR", message: "Failed to hide card" });
+        }
+    }
+
+    @Patch(":shopId/show")
+    @ApiShowCard()
+    async showCard(
+        @TelegramUser() telegramUser: ITelegramUser,
+        @Param("shopId") shopId: string,
+    ) {
+        try {
+            const userId = await this.userService.getUserIdByTelegramId(telegramUser.id);
+            await this.loyaltyCardService.showCard(userId, shopId);
+            return { success: true };
+        } catch {
+            throw new InternalServerErrorException({ code: "INTERNAL_ERROR", message: "Failed to show card" });
         }
     }
 

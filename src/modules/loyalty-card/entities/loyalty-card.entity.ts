@@ -46,6 +46,9 @@ export class LoyaltyCard extends Model {
     @Column({ type: DataType.INTEGER, allowNull: false, defaultValue: 0 })
     declare total_stamps_earned: number;
 
+    @Column({ type: DataType.BOOLEAN, allowNull: false, defaultValue: false })
+    declare is_hidden: boolean;
+
     @CreatedAt
     @Column({ field: "created_at" })
     declare created_at: Date;

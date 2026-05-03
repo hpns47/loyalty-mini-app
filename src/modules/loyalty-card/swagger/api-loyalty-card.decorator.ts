@@ -20,3 +20,23 @@ export function ApiGetOrCreateCard() {
         ApiResponse({ status: 401, description: "Невалидный initData" }),
     );
 }
+
+export function ApiHideCard() {
+    return applyDecorators(
+        ApiOperation({ summary: "Скрыть карту лояльности (soft delete)" }),
+        ApiSecurity("TelegramAuth"),
+        ApiParam({ name: "shopId", description: "UUID кофейни" }),
+        ApiResponse({ status: 200, description: "Карта скрыта" }),
+        ApiResponse({ status: 401, description: "Невалидный initData" }),
+    );
+}
+
+export function ApiShowCard() {
+    return applyDecorators(
+        ApiOperation({ summary: "Показать скрытую карту лояльности" }),
+        ApiSecurity("TelegramAuth"),
+        ApiParam({ name: "shopId", description: "UUID кофейни" }),
+        ApiResponse({ status: 200, description: "Карта показана" }),
+        ApiResponse({ status: 401, description: "Невалидный initData" }),
+    );
+}
