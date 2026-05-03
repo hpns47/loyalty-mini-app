@@ -64,6 +64,7 @@ export class StampController {
                 dto.qrToken,
                 cashierShop.shopId,
                 dto.quantity ?? 1,
+                cashierShop.userId,
             );
             this.logger.log(`redeemStamp: success userId=${result.cardId} newStampCount=${result.newStampCount} isRewardReady=${result.isRewardReady}`);
             return { stamp: result };
@@ -76,6 +77,7 @@ export class StampController {
                     STAMP_RATE_LIMIT: 429,
                     QUANTITY_EXCEEDS_THRESHOLD: 422,
                     DAILY_LIMIT_EXCEEDED: 429,
+                    SELF_STAMP: 403,
                 };
                 const status = statusMap[err.code] ?? 500;
                 this.logger.warn(`redeemStamp: StampError code=${err.code} status=${status} message=${err.message}`);

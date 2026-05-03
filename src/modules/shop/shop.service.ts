@@ -14,7 +14,7 @@ export class ShopService {
 
     async getShops(): Promise<IShopSummary[]> {
         const shops = await this.coffeeShopModel.findAll({
-            attributes: ["id", "name", "slug", "stamp_threshold", "category"],
+            attributes: ["id", "name", "slug", "stamp_threshold", "category", "card_bg_color"],
         });
 
         return shops.map((shop) => ({
@@ -23,6 +23,7 @@ export class ShopService {
             slug: shop.slug,
             stamp_threshold: shop.stamp_threshold,
             category: shop.category,
+            card_bg_color: shop.card_bg_color ?? null,
         }));
     }
 
@@ -62,9 +63,10 @@ export class ShopService {
         id: string; name: string; slug: string; stamp_threshold: number; category: string;
         logo_url: string | null; address: string | null; phone: string | null;
         reward_type: string | null; birthday_gift_enabled: boolean; birthday_gift_description: string | null;
+        card_bg_color?: string | null;
     }> {
         const shop = await this.coffeeShopModel.findByPk(shopId, {
-            attributes: ["id", "name", "slug", "stamp_threshold", "category", "logo_url", "address", "phone", "reward_type", "birthday_gift_enabled", "birthday_gift_description"],
+            attributes: ["id", "name", "slug", "stamp_threshold", "category", "logo_url", "address", "phone", "reward_type", "birthday_gift_enabled", "birthday_gift_description", "card_bg_color"],
         });
         if (!shop) {
             throw new NotFoundException({ code: "SHOP_NOT_FOUND", message: "Shop not found" });
@@ -76,6 +78,7 @@ export class ShopService {
             phone: (shop as any).phone ?? null, reward_type: shop.reward_type ?? null,
             birthday_gift_enabled: shop.birthday_gift_enabled,
             birthday_gift_description: shop.birthday_gift_description ?? null,
+            card_bg_color: shop.card_bg_color ?? null,
         };
     }
 

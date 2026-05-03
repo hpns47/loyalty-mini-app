@@ -36,7 +36,7 @@ export class StampService {
     this.qrSecret = this.configService.getOrThrow<string>("qrSecret");
   }
 
-  async redeemStamp(qrToken: string, shopId: string, quantity: number = 1): Promise<IStampResult> {
+  async redeemStamp(qrToken: string, shopId: string, quantity: number = 1, cashierUserId?: string): Promise<IStampResult> {
     this.logger.log(`redeemStamp: start shopId=${shopId} quantity=${quantity}`);
 
     const shop = await this.shopService.findById(shopId);
@@ -69,6 +69,12 @@ export class StampService {
       this.logger.warn(`redeemStamp: QR token verification failed — ${(err as Error).message}`);
       this.metricsService.stampErrors.inc({ code: "QR_TOKEN_INVALID" });
       throw new StampError("QR_TOKEN_INVALID", "Invalid or expired QR token");
+    }
+
+    if (cashierUserId && cashierUserId === userId) {
+      this.logger.warn(`redeemStamp: self-stamp attempt — cashierUserId=${cashierUserId} equals userId=${userId}`);
+      this.metricsService.stampErrors.inc({ code: "SELF_STAMP" });
+      throw new StampError("SELF_STAMP", "Кассир не может штамповать свою карту");
     }
 
     const qrTokenHash = createHash("sha256").update(qrToken).digest("hex");
@@ -129,6 +135,7 @@ export class StampService {
       isRewardReady: result.isRewardReady,
       userName,
       stampThreshold: shop.stamp_threshold,
+      shopName: shop.name,
     };
   }
 
